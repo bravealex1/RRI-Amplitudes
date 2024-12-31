@@ -2,73 +2,79 @@
 
 ## Introduction
 
-Sleep apnea is a prevalent sleep disorder characterized by repeated interruptions in breathing during sleep, leading to reduced oxygen supply to the body. Early detection is crucial to prevent associated health complications such as hypertension, cardiovascular diseases, and daytime fatigue. Traditional diagnostic methods like polysomnography are comprehensive but can be cumbersome and expensive. Consequently, there is a growing interest in developing automated, efficient, and cost-effective diagnostic tools using electrocardiogram (ECG) signals and machine learning techniques.
+The primary objective of the project was to analyze ECG data, extract meaningful features, and build predictive models for apnea detection. To achieve this, methodologies using both traditional machine learning (Random Forest) and deep learning approaches (PyTorch with hyperparameter tuning using Optuna) were implemented. 
 
 ## Methodology
 
-The approach involves processing single-lead ECG signals to extract features indicative of sleep apnea events. The methodology can be divided into several key steps:
+Data Acquisition and Preprocessing
+The dataset utilized was the Apnea-ECG Database, retrieved using the KaggleHub API.
+Preprocessing Steps:
+ECG signals were cleaned using NeuroKit2’s ecg_clean function.
+R-peaks were detected for feature extraction.
+Features such as RR intervals (mean and standard deviation) and R-peak amplitudes were derived.
+Labels indicating apnea ('A') or normal ('N') conditions were mapped to binary values (1 for apnea, 0 for normal).
+Splitting:
+The dataset was divided into training, validation, and testing sets, ensuring a balanced representation of both classes.
+Feature Engineering
+Key features extracted included:
+RR Intervals: Time differences between successive R-peaks.
+R-Peak Amplitudes: Heights of the detected R-peaks.
+These features encapsulate the variability and rhythm in ECG signals critical for apnea detection.
+Modeling Approaches
+Random Forest Classifier:
+A traditional machine learning approach was used to benchmark performance.
+Achieved an accuracy of approximately 94.06% on the test set.
+Deep Learning with PyTorch:
+An enhanced neural network was designed, incorporating two hidden layers with ReLU activations and dropout for regularization.
+Weighted cross-entropy loss was employed to handle class imbalances effectively.
+Hyperparameter Optimization with Optuna:
+Optuna was used to optimize hyperparameters such as learning rate, hidden layer sizes, dropout rate, and batch size.
+The best parameters included:
+'learning_rate': 0.0021064209979199974,
+'hidden_size1': 65,
+'hidden_size2': 47,
+'dropout_rate': 0.3058764629784719,
+'batch_size': 64
+Training and Validation
+The model was trained using the Adam optimizer. To enhance training efficiency and stability, a learning rate scheduler was employed to dynamically adjust the learning rate over epochs, ensuring optimal convergence.
+Throughout the training process, performance on the validation set was closely monitored. This approach not only prevented overfitting by ensuring the model generalized well to unseen data but also provided insights into its capacity to maintain robustness across different data distributions.
+Key evaluation metrics included:
+Loss: Monitored for both training and validation phases to gauge model optimization and detect any signs of overfitting or underfitting.
+Accuracy: Calculated for validation and test datasets to measure the model's overall performance in classifying apnea and normal samples.
+Classification Report: Metrics such as precision, recall, F1-score, and support for each class, offering a comprehensive understanding of the model's ability to balance sensitivity and specificity across both apnea and normal cases.
+Testing and Final Evaluation
+The test accuracy achieved was 59.85%, which is not good compared to random forest classifier.
 
-1. **Data Acquisition**: ECG recordings are obtained from datasets such as the PhysioNet Apnea-ECG Database. These recordings include annotations indicating apnea (A) or normal (N) events.
+## Results
 
-2. **Signal Preprocessing**: The raw ECG signals are cleaned to remove noise and artifacts, often using tools like NeuroKit2's `ecg_clean` function.
+Random Forest Benchmark:
+The Random Forest model achieved an impressive accuracy of 94.06%, demonstrating its effectiveness as a baseline for the problem.
+Deep Learning Approach:
+The deep learning model, implemented using PyTorch, yielded a validation accuracy of 65.56% and a test accuracy of 59.85%. While the addition of dropout regularization enhanced the model's robustness by mitigating overfitting, overall accuracy remained suboptimal (Chung et al., 2022).
+Hyperparameter Tuning:
+Despite using Optuna, an advanced hyperparameter optimization framework, the tuning process did not significantly improve the model's performance. This suggests that the deep learning model may require architectural changes or additional data for better optimization (Hong et al., 2020).
 
-3. **Feature Extraction**:
-   - **R-Peak Detection**: Identifying the R-peaks in the ECG to calculate intervals between heartbeats.
-   - **RR Intervals**: Calculating the time intervals between successive R-peaks, which reflect heart rate variability.
-   - **R-Peak Amplitudes**: Measuring the amplitude of R-peaks, providing information about the heart's electrical activity.
+## Discussion
 
-4. **Feature Aggregation**: For each segment of the ECG corresponding to annotated events, statistical measures such as the mean and standard deviation of RR intervals and the mean of R-peak amplitudes are computed.
+This project explored the use of regression algorithms and deep learning models, specifically using PyTorch, to analyze physiological signals like ECG. While Random Forest achieved high accuracy with manual feature engineering, PyTorch offered several advantages that, with further refinement, could lead to improved performance:
+Automated Feature Extraction:
+Unlike traditional methods, the deep learning model was capable of learning relevant features directly from raw data, reducing the reliance on manual feature engineering. This aligns with the growing trend of leveraging end-to-end learning for signal processing tasks (Nurmaini et al., 2019).
+Improved Model Robustness:
+Incorporating dropout regularization helped mitigate overfitting, especially given the relatively small dataset, and highlighted the potential of deep learning for tasks involving complex temporal patterns (Niu et al., 2020).
 
-5. **Model Training and Evaluation**: The aggregated features serve as inputs to machine learning models, such as Random Forest classifiers. The dataset is split into training and testing sets to evaluate the model's performance using metrics like accuracy, sensitivity, specificity, and the area under the receiver operating characteristic curve (AUC).
+## Limitations
 
-## Enhancements and Considerations
-
-Recent advancements have introduced several enhancements to improve the accuracy and robustness of sleep apnea detection:
-
-- **Expanded Dataset**: Utilizing a comprehensive list of ECG records (e.g., "a01" to "a20", "b01" to "b05", "c01" to "c10") ensures a diverse dataset, which can improve the model's generalizability.
-
-- **Data Preprocessing**: Implementing thorough preprocessing steps, such as noise filtering and baseline correction, enhances the quality of the ECG signals, leading to more accurate feature extraction.
-
-- **Feature Engineering**: Incorporating additional features, such as heart rate variability metrics and frequency domain features, can provide a more comprehensive representation of the physiological signals associated with sleep apnea.
-
-- **Advanced Machine Learning Models**: Exploring deep learning architectures, such as convolutional neural networks (CNNs) and recurrent neural networks (RNNs), can capture complex patterns in ECG signals, potentially improving detection accuracy.
-
-## Comparison of Code Implementations
-
-Two code implementations were provided for sleep apnea detection using ECG signals. The primary differences between them are:
-
-- **Dataset Path Specification**: The second implementation defines `base_path` and constructs `data_path` by appending the dataset folder name, ensuring the correct path to the ECG records.
-
-- **Record Names**: The second implementation includes a more extensive list of ECG record names, covering a broader range of data.
-
-- **Debugging Statements**: The second implementation incorporates print statements to log the loading and processing of each record, aiding in debugging and monitoring the processing flow.
-
-- **R-Peak Detection Method**: The second implementation uses `nk.ecg_findpeaks` for R-peak detection, which may offer improved accuracy over `nk.ecg_peaks`.
-
-- **Feature Aggregation Logic**: The second implementation ensures that the loop iterates over the minimum length of labels, RR intervals, and R-peak amplitudes to avoid index errors, enhancing robustness.
-
-## Alternative Approaches
-
-Recent research has explored various methodologies for sleep apnea detection using ECG signals:
-
-- **Deep Learning Models**: Studies have employed deep learning architectures, such as CNNs and RNNs, to automatically learn features from ECG data, achieving high accuracy in apnea detection.
-
-  [IEEE Xplore](https://ieeexplore.ieee.org/document/9714370?utm_source=chatgpt.com)
-
-- **Transfer Learning**: Applying transfer learning with pre-trained deep convolutional neural networks has shown promise in classifying obstructive sleep apnea using ECG signals.
-
-  [SpringerLink](https://link.springer.com/article/10.1007/s12530-022-09445-1?utm_source=chatgpt.com)
-
-- **Hybrid Models**: Combining convolutional and recurrent neural networks has been effective in capturing both spatial and temporal features of ECG signals for apnea detection.
-
-  [SpringerLink](https://link.springer.com/article/10.1007/s13042-023-02080-5?utm_source=chatgpt.com)
-
-## Conclusion
-
-Detecting sleep apnea using single-lead ECG signals and machine learning techniques offers a non-invasive and efficient alternative to traditional diagnostic methods. By implementing comprehensive preprocessing, robust feature extraction, and advanced machine learning models, it is possible to develop accurate and reliable diagnostic tools. Ongoing research continues to enhance these methodologies, incorporating deep learning and hybrid models to improve detection performance.
+Dataset Constraints:
+The dataset's size posed significant challenges. Small datasets often limit the generalization capabilities of deep learning models, a challenge commonly noted in medical signal processing (Hong et al., 2020). Future work could focus on data augmentation or transfer learning to overcome these limitations.
+Architectural Exploration:
+The model primarily relied on basic feedforward neural networks. Advanced architectures like Long Short-Term Memory (LSTMs) and Transformer-based models could better capture temporal dependencies in physiological signals (Chang et al., 2018). Exploring these architectures may yield substantial performance improvements.
+Hyperparameter Optimization:
+While Optuna's optimization process identified an optimal combination of hyperparameters, it failed to significantly improve accuracy. This highlights the importance of not only fine-tuning but also designing new loss function and training schema (Hong et al., 2020).
 
 ## References
 
-- [IEEE Xplore](https://ieeexplore.ieee.org/document/9714370?utm_source=chatgpt.com)
-- [SpringerLink](https://link.springer.com/article/10.1007/s12530-022-09445-1?utm_source=chatgpt.com)
-- [SpringerLink](https://link.springer.com/article/10.1007/s13042-023-02080-5?utm_source=chatgpt.com)
+Chang, Y. C., Wu, S. H., Tseng, L. M., Chao, H. L., & Ko, C. H. (2018, September). AF detection by exploiting the spectral and temporal characteristics of ECG signals with the LSTM model. In 2018 Computing in cardiology conference (CinC) (Vol. 45, pp. 1-4). IEEE.
+Chung, C. T., Lee, S., King, E., Liu, T., Armoundas, A. A., Bazoukis, G., & Tse, G. (2022). Clinical significance, challenges and limitations in using artificial intelligence for electrocardiography-based diagnosis. International journal of arrhythmia, 23(1), 24.
+Hong, S., Zhou, Y., Shang, J., Xiao, C., & Sun, J. (2020). Opportunities and challenges of deep learning methods for electrocardiogram data: A systematic review. Computers in biology and medicine, 122, 103801.
+Niu, L., Chen, C., Liu, H., Zhou, S., & Shu, M. (2020). A Deep-Learning Approach to ECG Classification Based on Adversarial Domain Adaptation. Healthcare, 8(4), 437. https://doi.org/10.3390/healthcare8040437
+Nurmaini, S., Umi Partan, R., Caesarendra, W., Dewi, T., Naufal Rahmatullah, M., Darmawahyuni, A., Bhayyu, V., & Firdaus, F. (2019). An Automated ECG Beat Classification System Using Deep Neural Networks with an Unsupervised Feature Extraction Technique. Applied Sciences, 9(14), 2921. https://doi.org/10.3390/app9142921
